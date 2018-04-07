@@ -98,7 +98,9 @@ class CondGANTrainer(object):
                 z = tf.random_normal([self.batch_size, cfg.Z_DIM])
                 self.log_vars.append(("hist_c", c))
                 self.log_vars.append(("hist_z", z))
-                fake_images = self.model.get_generator(tf.concat(1, [c, z]))
+                # changed by lihang liu
+                fake_images = self.model.get_generator(tf.concat([c, z], 1))
+                # fake_images = self.model.get_generator(tf.concat(1, [c, z]))
 
             # ####get discriminator_loss and generator_loss ###################
             discriminator_loss, generator_loss =\
@@ -128,24 +130,41 @@ class CondGANTrainer(object):
             z = tf.zeros([self.batch_size, cfg.Z_DIM])  # Expect similar BGs
         else:
             z = tf.random_normal([self.batch_size, cfg.Z_DIM])
-        self.fake_images = self.model.get_generator(tf.concat(1, [c, z]))
+        # changed by lihang liu
+        # self.fake_images = self.model.get_generator(tf.concat(1, [c, z]))
+        self.fake_images = self.model.get_generator(tf.concat([c, z], 1))
 
     def compute_losses(self, images, wrong_images, fake_images, embeddings):
         real_logit = self.model.get_discriminator(images, embeddings)
         wrong_logit = self.model.get_discriminator(wrong_images, embeddings)
         fake_logit = self.model.get_discriminator(fake_images, embeddings)
 
-        real_d_loss =\
-            tf.nn.sigmoid_cross_entropy_with_logits(real_logit,
-                                                    tf.ones_like(real_logit))
+        # changed by lihang liu
+        # real_d_loss =\
+        #     tf.nn.sigmoid_cross_entropy_with_logits(real_logit,
+        #                                             tf.ones_like(real_logit))
+        real_d_loss = tf.nn.sigmoid_cross_entropy_with_logits(
+            logits=real_logit, labels=tf.ones_like(real_logit)
+        )
+
         real_d_loss = tf.reduce_mean(real_d_loss)
-        wrong_d_loss =\
-            tf.nn.sigmoid_cross_entropy_with_logits(wrong_logit,
-                                                    tf.zeros_like(wrong_logit))
+        # changed by lihang liu
+        # wrong_d_loss =\
+        #     tf.nn.sigmoid_cross_entropy_with_logits(wrong_logit,
+        #                                             tf.zeros_like(wrong_logit))
+        wrong_d_loss = tf.nn.sigmoid_cross_entropy_with_logits(
+            logits=wrong_logit, labels=tf.zeros_like(wrong_logit)
+        )
+
         wrong_d_loss = tf.reduce_mean(wrong_d_loss)
-        fake_d_loss =\
-            tf.nn.sigmoid_cross_entropy_with_logits(fake_logit,
-                                                    tf.zeros_like(fake_logit))
+        # changed by lihang liu
+        # fake_d_loss =\
+        #     tf.nn.sigmoid_cross_entropy_with_logits(fake_logit,
+        #                                             tf.zeros_like(fake_logit))
+        fake_d_loss = tf.nn.sigmoid_cross_entropy_with_logits(
+            logits=fake_logit, labels=tf.zeros_like(fake_logit)
+        )
+
         fake_d_loss = tf.reduce_mean(fake_d_loss)
         if cfg.TRAIN.B_WRONG:
             discriminator_loss =\
@@ -156,9 +175,13 @@ class CondGANTrainer(object):
         self.log_vars.append(("d_loss_real", real_d_loss))
         self.log_vars.append(("d_loss_fake", fake_d_loss))
 
-        generator_loss = \
-            tf.nn.sigmoid_cross_entropy_with_logits(fake_logit,
-                                                    tf.ones_like(fake_logit))
+        # changed by lihang liu
+        # generator_loss = \
+        #     tf.nn.sigmoid_cross_entropy_with_logits(fake_logit,
+        #                                             tf.ones_like(fake_logit))
+        generator_loss = tf.nn.sigmoid_cross_entropy_with_logits(
+            logits=fake_logit, labels=tf.ones_like(fake_logit)
+        )
         generator_loss = tf.reduce_mean(generator_loss)
 
         return discriminator_loss, generator_loss
@@ -192,15 +215,25 @@ class CondGANTrainer(object):
         all_sum = {'g': [], 'd': [], 'hist': []}
         for k, v in self.log_vars:
             if k.startswith('g'):
-                all_sum['g'].append(tf.scalar_summary(k, v))
+                # changed by lihang liu
+                # all_sum['g'].append(tf.scalar_summary(k, v))
+                all_sum['g'].append(tf.summary.scalar(k, v))
             elif k.startswith('d'):
-                all_sum['d'].append(tf.scalar_summary(k, v))
+                # changed by lihang liu
+                # all_sum['d'].append(tf.scalar_summary(k, v))
+                all_sum['d'].append(tf.summary.scalar(k, v))
             elif k.startswith('hist'):
-                all_sum['hist'].append(tf.histogram_summary(k, v))
+                # changed by lihang liu
+                # all_sum['hist'].append(tf.histogram_summary(k, v))
+                all_sum['hist'].append(tf.summary.histogram(k, v))
 
-        self.g_sum = tf.merge_summary(all_sum['g'])
-        self.d_sum = tf.merge_summary(all_sum['d'])
-        self.hist_sum = tf.merge_summary(all_sum['hist'])
+        # changed by lihang liu
+        # self.g_sum = tf.merge_summary(all_sum['g'])
+        # self.d_sum = tf.merge_summary(all_sum['d'])
+        # self.hist_sum = tf.merge_summary(all_sum['hist'])
+        self.g_sum = tf.summary.merge(all_sum['g'])
+        self.d_sum = tf.summary.merge(all_sum['d'])
+        self.hist_sum = tf.summary.merge(all_sum['hist'])
 
     def visualize_one_superimage(self, img_var, images, rows, filename):
         stacked_img = []
@@ -210,9 +243,13 @@ class CondGANTrainer(object):
             for col in range(rows):
                 row_img.append(img_var[row * rows + col, :, :, :])
             # each rows is 1realimage +10_fakeimage
-            stacked_img.append(tf.concat(1, row_img))
-        imgs = tf.expand_dims(tf.concat(0, stacked_img), 0)
-        current_img_summary = tf.image_summary(filename, imgs)
+            # changed by lihang liu
+            # stacked_img.append(tf.concat(1, row_img))
+            stacked_img.append(tf.concat(row_img, 1))
+        # changed by lihang liu
+        # imgs = tf.expand_dims(tf.concat(0, stacked_img), 0)
+        imgs = tf.expand_dims(tf.concat(stacked_img, 0), 0)
+        current_img_summary = tf.summary.image(filename, imgs)
         return current_img_summary, imgs
 
     def visualization(self, n):
@@ -224,8 +261,11 @@ class CondGANTrainer(object):
             self.visualize_one_superimage(self.fake_images[n * n:2 * n * n],
                                           self.images[n * n:2 * n * n],
                                           n, "test")
-        self.superimages = tf.concat(0, [superimage_train, superimage_test])
-        self.image_summary = tf.merge_summary([fake_sum_train, fake_sum_test])
+        # changed by lihang liu
+        # self.superimages = tf.concat(0, [superimage_train, superimage_test])
+        # self.image_summary = tf.merge_summary([fake_sum_train, fake_sum_test])
+        self.superimages = tf.concat([superimage_train, superimage_test], 0)
+        self.image_summary = tf.summary.merge([fake_sum_train, fake_sum_test])
 
     def preprocess(self, x, n):
         # make sure every row with n column have the same embeddings
@@ -278,7 +318,9 @@ class CondGANTrainer(object):
 
     def build_model(self, sess):
         self.init_opt()
-        sess.run(tf.initialize_all_variables())
+        # changed by lihang liu
+        # sess.run(tf.initialize_all_variables())
+        sess.run(tf.global_variables_initializer())
 
         if len(self.model_path) > 0:
             print("Reading model parameters from %s" % self.model_path)
@@ -304,11 +346,17 @@ class CondGANTrainer(object):
         with tf.Session(config=config) as sess:
             with tf.device("/gpu:%d" % cfg.GPU_ID):
                 counter = self.build_model(sess)
-                saver = tf.train.Saver(tf.all_variables(),
+                # changed by lihang liu
+                # saver = tf.train.Saver(tf.all_variables(),
+                #                        keep_checkpoint_every_n_hours=2)
+                saver = tf.train.Saver(tf.global_variables(),
                                        keep_checkpoint_every_n_hours=2)
 
                 # summary_op = tf.merge_all_summaries()
-                summary_writer = tf.train.SummaryWriter(self.log_dir,
+                # change by lihang liu
+                # summary_writer = tf.train.SummaryWriter(self.log_dir,
+                #                                         sess.graph)
+                summary_writer = tf.summary.FileWriter(self.log_dir,
                                                         sess.graph)
 
                 keys = ["d_loss", "g_loss"]

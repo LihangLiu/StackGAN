@@ -2,3 +2,5 @@
 ckt_logs
 backup
 .DS_Store
+outputs
+condor_submit
