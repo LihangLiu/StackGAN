@@ -19,7 +19,12 @@ python 2.7
 
 [Optional] [skip-thought](https://github.com/ryankiros/skip-thoughts) is needed, if use the skip-thought text encoder.
 
-In addition, please add the project folder to PYTHONPATH and `pip install` the following packages:
+In addition, please add the project folder to PYTHONPATH:
+
+    cd StackGAN
+    export PYTHONPATH=$(pwd)$PYTHONPATH
+
+and `pip install` the following packages:
 - `prettytensor`
 - `progressbar`
 - `python-dateutil`
@@ -35,15 +40,26 @@ In addition, please add the project folder to PYTHONPATH and `pip install` the f
   - [Optional] Follow the instructions [reedscot/icml2016](https://github.com/reedscot/icml2016) to download the pretrained char-CNN-RNN text encoders and extract text embeddings.
 2. Download the [birds](http://www.vision.caltech.edu/visipedia/CUB-200-2011.html) and [flowers](http://www.robots.ox.ac.uk/~vgg/data/flowers/102/) image data. Extract them to `Data/birds/` and `Data/flowers/`, respectively.
 3. Preprocess images.
-  - For birds: `python misc/preprocess_birds.py`
-  - For flowers: `python misc/preprocess_flowers.py`
+  - For birds: 
+  
+        python misc/preprocess_birds.py
+        
+  - For flowers: 
+  
+        python misc/preprocess_flowers.py
 
 
 
 **Training**
 - The steps to train a StackGAN model on the CUB dataset using our preprocessed data for birds.
-  - Step 1: train Stage-I GAN (e.g., for 600 epochs) `python stageI/run_exp.py --cfg stageI/cfg/birds.yml --gpu 0`
-  - Step 2: train Stage-II GAN (e.g., for another 600 epochs) `python stageII/run_exp.py --cfg stageII/cfg/birds.yml --gpu 1`
+  - Step 1: train Stage-I GAN (e.g., for 600 epochs) 
+  
+        python stageI/run_exp.py --cfg stageI/cfg/birds.yml
+    
+  - Step 2: train Stage-II GAN (e.g., for another 600 epochs) 
+        
+        python stageII/run_exp.py --cfg stageII/cfg/birds.yml
+        
 - Change `birds.yml` to `flowers.yml` to train a StackGAN model on Oxford-102 dataset using our preprocessed data for flowers.
 - `*.yml` files are example configuration files for training/testing our models.
 - If you want to try your own datasets, [here](https://github.com/soumith/ganhacks) are some good tips about how to train GAN. Also, we encourage to try different hyper-parameters and architectures, especially for more complex datasets.
