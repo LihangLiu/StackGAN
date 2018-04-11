@@ -1,7 +1,7 @@
 import os
 import glob
 
-version = 'stack_I'
+version = 'stageInfo_dfake_dreal_embed'
 
 ### run file
 Executable_file = 'run_%s.sh' % (version)
@@ -9,7 +9,7 @@ with open(Executable_file, 'w') as f:
 	f.write("""#!/bin/bash
 source activate tensorflow
 export PYTHONPATH=/scratch/cluster/leonliu/repos/StackGAN:$PYTHONPATH
-python stageI/run_exp.py --cfg stageI/cfg/birds.yml
+python -m stageInfo.run_exp --cfg stageInfo/cfg/birds.yml
 """)
 print(Executable_file, 'generated')
 os.system('chmod 755 %s'%(Executable_file))
